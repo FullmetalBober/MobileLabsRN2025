@@ -36,6 +36,12 @@ export default function FileBrowser() {
     setCurrentPath((prev) => prev.split('/').slice(0, -2).join('/') + '/');
   };
 
+  const deleteFolder = async (folderName: string) => {
+    const path = currentPath + folderName;
+    await FileSystem.deleteAsync(path, { idempotent: true });
+    loadDirectory(currentPath);
+  };
+
   return (
     <View className="m-3 flex-1 gap-3">
       <Text className="text-lg font-bold">
@@ -58,7 +64,9 @@ export default function FileBrowser() {
       <FlatList
         data={items}
         keyExtractor={(item) => item}
-        renderItem={({ item }) => <Folder name={item} onPress={goToFolder} />}
+        renderItem={({ item }) => (
+          <Folder name={item} onPress={goToFolder} onDelete={deleteFolder} />
+        )}
       />
     </View>
   );
