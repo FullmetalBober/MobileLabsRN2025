@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, FlatList, TextInput, Button } from 'react-native';
+import { View, Text, FlatList, TextInput, Button, TouchableOpacity } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import { Folder } from '~/components/Folder';
 
@@ -26,11 +26,27 @@ export default function FileBrowser() {
     setFolderName('');
   };
 
+  const goToFolder = (folderName: string) => {
+    setCurrentPath((prev) => prev + folderName + '/');
+  };
+
+  const goBack = () => {
+    if (currentPath === ROOT_DIR) return;
+
+    setCurrentPath((prev) => prev.split('/').slice(0, -2).join('/') + '/');
+  };
+
   return (
     <View className="m-3 flex-1 gap-3">
       <Text className="text-lg font-bold">
         {currentPath.replace(FileSystem.documentDirectory!, '')}
       </Text>
+
+      {currentPath !== ROOT_DIR && (
+        <TouchableOpacity onPress={goBack}>
+          <Text className="text-lg text-blue-500">Go Back</Text>
+        </TouchableOpacity>
+      )}
 
       <TextInput
         value={folderName}
@@ -42,7 +58,7 @@ export default function FileBrowser() {
       <FlatList
         data={items}
         keyExtractor={(item) => item}
-        renderItem={({ item }) => <Folder name={item} />}
+        renderItem={({ item }) => <Folder name={item} onPress={goToFolder} />}
       />
     </View>
   );
