@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { View, Text, FlatList, TextInput, Button, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, TextInput, Button, TouchableOpacity, Alert } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 import { Folder } from '~/components/Folder';
+import { File } from '~/components/File';
 
 const ROOT_DIR = FileSystem.documentDirectory + 'AppData/';
 
@@ -19,9 +20,10 @@ export default function FileBrowser() {
     setItems(contents);
   };
 
-  const createFolder = async () => {
+  const createItem = async () => {
     const newPath = currentPath + folderName;
-    await FileSystem.makeDirectoryAsync(newPath, { intermediates: true });
+    if (folderName.includes('.txt')) await FileSystem.writeAsStringAsync(newPath, '');
+    else await FileSystem.makeDirectoryAsync(newPath, { intermediates: true });
     loadDirectory(currentPath);
     setFolderName('');
   };
@@ -36,10 +38,38 @@ export default function FileBrowser() {
     setCurrentPath((prev) => prev.split('/').slice(0, -2).join('/') + '/');
   };
 
-  const deleteFolder = async (folderName: string) => {
+  const deleteItem = async (folderName: string) => {
     const path = currentPath + folderName;
     await FileSystem.deleteAsync(path, { idempotent: true });
     loadDirectory(currentPath);
+  };
+
+  const getFileContent = async (fileName: string) => {
+    const path = currentPath + fileName;
+    const content = await FileSystem.readAsStringAsync(path);
+
+    return content;
+  };
+
+  const updateFile = async (fileName: string, content: string) => {
+    const path = currentPath + fileName;
+    await FileSystem.writeAsStringAsync(path, content);
+  };
+
+  const confirmDelete = (name: string) => {
+    Alert.alert(
+      'Confirm Deletion',
+      `Are you sure you want to delete "${name}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => deleteItem(name),
+        },
+      ],
+      { cancelable: true }
+    );
   };
 
   return (
@@ -59,13 +89,24 @@ export default function FileBrowser() {
         onChangeText={setFolderName}
         className="border border-gray-400"
       />
-      <Button title="Create" onPress={createFolder} disabled={!folderName} />
+      <Button title="Create" onPress={createItem} disabled={!folderName} />
 
       <FlatList
         data={items}
         keyExtractor={(item) => item}
         renderItem={({ item }) => (
-          <Folder name={item} onPress={goToFolder} onDelete={deleteFolder} />
+          <>
+            {!item.includes('.txt') ? (
+              <Folder name={item} onPress={goToFolder} onDelete={confirmDelete} />
+            ) : (
+              <File
+                name={item}
+                getFileContent={getFileContent}
+                onUpdate={updateFile}
+                onDelete={confirmDelete}
+              />
+            )}
+          </>
         )}
       />
     </View>
