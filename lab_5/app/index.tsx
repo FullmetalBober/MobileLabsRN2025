@@ -28,7 +28,7 @@ export default function Home() {
       <Container>
         <Stats />
         <Link href={{ pathname: '/details', params: { name: 'Dan' } }} asChild>
-          <Button title="Show Details" />
+          <Button title="Show Directory" />
         </Link>
       </Container>
     </>
