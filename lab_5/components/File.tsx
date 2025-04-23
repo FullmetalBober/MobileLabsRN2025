@@ -6,15 +6,29 @@ import { useEffect, useState } from 'react';
 type ScreenContentProps = {
   name: string;
   getFileContent: (name: string) => Promise<string>;
+  getFileInfo: (name: string) => Promise<{ fileSize: string; lastModified: string }>;
   onUpdate: (name: string, content: string) => void;
   onDelete: (name: string) => void;
 };
 
-export const File = ({ name, getFileContent, onUpdate, onDelete }: ScreenContentProps) => {
+export const File = ({
+  name,
+  getFileContent,
+  getFileInfo,
+  onUpdate,
+  onDelete,
+}: ScreenContentProps) => {
   const [inputOpen, setInputOpen] = useState(false);
   const [content, setContent] = useState('');
+  const [fileInfo, setFileInfo] = useState<{ fileSize: string; lastModified: string }>();
 
   useEffect(() => {
+    if (!inputOpen) {
+      (async () => {
+        const info = await getFileInfo(name);
+        setFileInfo(info);
+      })();
+    }
     if (inputOpen && content === '') {
       (async () => {
         const fileContent = await getFileContent(name);
@@ -30,6 +44,12 @@ export const File = ({ name, getFileContent, onUpdate, onDelete }: ScreenContent
         <View className="flex flex-row gap-2">
           <AntDesign name="file1" size={24} color="black" />
           <Text>{name}</Text>
+          {fileInfo && (
+            <View className="flex-row gap-2">
+              <Text className="text-sm">{fileInfo.fileSize}</Text>
+              <Text className="text-sm">{fileInfo.lastModified}</Text>
+            </View>
+          )}
         </View>
         <TouchableOpacity onPress={() => onDelete(name)}>
           <Feather name="trash-2" size={24} color="black" />

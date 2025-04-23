@@ -3,6 +3,7 @@ import { View, Text, FlatList, TextInput, Button, TouchableOpacity, Alert } from
 import * as FileSystem from 'expo-file-system';
 import { Folder } from '~/components/Folder';
 import { File } from '~/components/File';
+import { formatBytes } from '~/utils';
 
 const ROOT_DIR = FileSystem.documentDirectory + 'AppData/';
 
@@ -42,6 +43,19 @@ export default function FileBrowser() {
     const path = currentPath + folderName;
     await FileSystem.deleteAsync(path, { idempotent: true });
     loadDirectory(currentPath);
+  };
+
+  const getFileInfo = async (fileName: string) => {
+    const path = currentPath + fileName;
+    const info = await FileSystem.getInfoAsync(path, {
+      size: true,
+    });
+
+    if (!info.exists) throw new Error('File does not exist');
+    return {
+      fileSize: formatBytes(info.size),
+      lastModified: new Date(info.modificationTime).toLocaleString(),
+    };
   };
 
   const getFileContent = async (fileName: string) => {
@@ -102,6 +116,7 @@ export default function FileBrowser() {
               <File
                 name={item}
                 getFileContent={getFileContent}
+                getFileInfo={getFileInfo}
                 onUpdate={updateFile}
                 onDelete={confirmDelete}
               />
