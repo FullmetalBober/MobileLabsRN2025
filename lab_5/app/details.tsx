@@ -54,7 +54,7 @@ export default function FileBrowser() {
     if (!info.exists) throw new Error('File does not exist');
     return {
       fileSize: formatBytes(info.size),
-      lastModified: new Date(info.modificationTime).toLocaleString(),
+      lastModified: new Date(info.modificationTime * 1000).toLocaleString(),
     };
   };
 
